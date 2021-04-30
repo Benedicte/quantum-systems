@@ -1,6 +1,7 @@
 from .system import QuantumSystem
 from .general_orbital_system import GeneralOrbitalSystem
 from .spatial_orbital_system import SpatialOrbitalSystem
+from .quest_system import QuestSystem
 from .basis_set import BasisSet
 from .custom_system import (
     # construct_psi4_system,
