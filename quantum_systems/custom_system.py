@@ -5,6 +5,7 @@ from quantum_systems import (
     SpatialOrbitalSystem,
     GeneralOrbitalSystem,
     QuantumSystem,
+    QuestSystem,
 )
 
 
