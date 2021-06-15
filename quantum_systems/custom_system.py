@@ -5,7 +5,6 @@ from quantum_systems import (
     SpatialOrbitalSystem,
     GeneralOrbitalSystem,
     QuantumSystem,
-    QuestSystem,
 )
 
 
@@ -231,7 +230,7 @@ def construct_pyscf_system_rhf(
     )
 
 
-def construct_quest_system_rhf(
+def construct_quest_system(
     n,
     l,
     h,
@@ -247,20 +246,15 @@ def construct_quest_system_rhf(
     if np is None:
         import numpy as np
 
-    assert (
-        n % 2 == 0
-    ), "We require closed shell, with an even number of particles"
-
-    bs = BasisSet(l, dim=3, np=np)
+    bs = BasisSet(l, dim=3, np=np, includes_spin=True, anti_symmetrized_u=True)
     bs.h = h
     bs.u = u
     bs.nuclear_repulsion_energy = nuclear_repulsion_energy
     bs.particle_charge = -1
     bs.position = -1*dip_int
 
-    system = QuestSystem(n, bs)
+    system = GeneralOrbitalSystem(n, bs)
 
-    
     return system
 
 
