@@ -229,7 +229,6 @@ def construct_pyscf_system_rhf(
         else system
     )
 
-
 def construct_quest_system(
     n,
     l,
@@ -246,66 +245,45 @@ def construct_quest_system(
     if np is None:
         import numpy as np
 
-    bs = BasisSet(l, dim=3, np=np, includes_spin=True, anti_symmetrized_u=True)
+    bs = BasisSet(l, dim=3, np=np, includes_spin=False, anti_symmetrized_u=False)
     bs.h = h
     bs.u = u
     bs.nuclear_repulsion_energy = nuclear_repulsion_energy
     bs.particle_charge = -1
     bs.position = -1*dip_int
 
-    system = GeneralOrbitalSystem(n, bs)
+    system = GeneralOrbitalSystem(n, bs)   
 
     return system
 
+def construct_quest_system_rhf(
+    n,
+    l,
+    h,
+    s,
+    u,
+    mo_coef,
+    nuclear_repulsion_energy,
+    dip_int, 
+    anti_symmetrize=False,
+    np=None,
+    verbose=False,
+    **kwargs,
+):
+    if np is None:
+        import numpy as np
 
-# def construct_psi4_system(
-#     molecule, options, np=None, add_spin=True, anti_symmetrize=True
-# ):
-#     import psi4
-#
-#     if np is None:
-#         import numpy as np
-#
-#     psi4.core.be_quiet()
-#     psi4.set_options(options)
-#
-#     mol = psi4.geometry(molecule)
-#     nuclear_repulsion_energy = mol.nuclear_repulsion_energy()
-#
-#     wavefunction = psi4.core.Wavefunction.build(
-#         mol, psi4.core.get_global_option("BASIS")
-#     )
-#
-#     molecular_integrals = psi4.core.MintsHelper(wavefunction.basisset())
-#
-#     kinetic = np.asarray(molecular_integrals.ao_kinetic())
-#     potential = np.asarray(molecular_integrals.ao_potential())
-#     h = kinetic + potential
-#
-#     u = np.asarray(molecular_integrals.ao_eri()).transpose(0, 2, 1, 3)
-#     overlap = np.asarray(molecular_integrals.ao_overlap())
-#
-#     n_a = wavefunction.nalpha()
-#     n_b = wavefunction.nbeta()
-#     n = n_a + n_b
-#     l = wavefunction.nmo()
-#
-#     dipole_integrals = [
-#         np.asarray(mu) for mu in molecular_integrals.ao_dipole()
-#     ]
-#     dipole_integrals = np.stack(dipole_integrals)
-#
-#     system = OrbitalSystem(n, l, n_a=n_a, np=np)
-#     system.set_h(h)
-#     system.set_u(u)
-#     system.set_s(overlap)
-#     system.set_dipole_moment(dipole_integrals)
-#     system.set_nuclear_repulsion_energy(nuclear_repulsion_energy)
-#
-#     system.change_module(np=np)
-#
-#     return (
-#         system.change_to_spin_orbital_basis(anti_symmetrize=anti_symmetrize)
-#         if add_spin
-#         else system
-#     )
+    bs = BasisSet(l, dim=3, np=np, includes_spin=False, anti_symmetrized_u=False)
+    bs.h = h
+    bs.s = s
+    bs.u = u
+    bs.nuclear_repulsion_energy = nuclear_repulsion_energy
+    bs.particle_charge = -1
+    bs.position = -1*dip_int
+
+    system = SpatialOrbitalSystem(n, bs)
+    system.change_basis(mo_coef)
+ 
+    return system
+
+
