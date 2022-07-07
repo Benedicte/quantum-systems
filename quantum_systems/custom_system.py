@@ -217,9 +217,6 @@ def construct_pyscf_system_rhf(
     bs.position = position
     bs.change_module(np=np)
 
-    print("position before transformation")
-    print(bs.position)
-
     system = SpatialOrbitalSystem(n, bs)
     system.change_basis(C)
 
@@ -236,6 +233,7 @@ def construct_quest_system(
     u,
     nuclear_repulsion_energy,
     dip_int, 
+    mom_int,
     anti_symmetrize=False,
     np=None,
     verbose=False,
@@ -245,12 +243,13 @@ def construct_quest_system(
     if np is None:
         import numpy as np
 
-    bs = BasisSet(l, dim=3, np=np, includes_spin=False, anti_symmetrized_u=False)
+    bs = BasisSet(l, dim=3, np=np, includes_spin=True, anti_symmetrized_u=True)
     bs.h = h
     bs.u = u
     bs.nuclear_repulsion_energy = nuclear_repulsion_energy
     bs.particle_charge = -1
     bs.position = -1*dip_int
+    bs.momentum = mom_int
 
     system = GeneralOrbitalSystem(n, bs)   
 
@@ -287,3 +286,34 @@ def construct_quest_system_rhf(
     return system
 
 
+def construct_quest_system_rhf_mom(
+    n,
+    l,
+    h,
+    s,
+    u,
+    mo_coef,
+    nuclear_repulsion_energy,
+    dip_int, 
+    mom_int,
+    anti_symmetrize=False,
+    np=None,
+    verbose=False,
+    **kwargs,
+):
+    if np is None:
+        import numpy as np
+
+    bs = BasisSet(l, dim=3, np=np, includes_spin=False, anti_symmetrized_u=False)
+    bs.h = h
+    bs.s = s
+    bs.u = u
+    bs.nuclear_repulsion_energy = nuclear_repulsion_energy
+    bs.particle_charge = -1
+    bs.position = -1*dip_int
+    bs.momentum = mom_int
+
+    system = SpatialOrbitalSystem(n, bs)
+    system.change_basis(mo_coef)
+ 
+    return system

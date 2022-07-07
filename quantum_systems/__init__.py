@@ -10,6 +10,7 @@ from .custom_system import (
     construct_pyscf_system_rhf,
     construct_quest_system,
     construct_quest_system_rhf,
+    construct_quest_system_rhf_mom,
 )
 from .random_basis import RandomBasisSet
 from quantum_systems.sinc_dvr.one_dim.sinc_dvr import ODSincDVR
