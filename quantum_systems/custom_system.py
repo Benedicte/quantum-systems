@@ -8,6 +8,95 @@ from quantum_systems import (
 )
 
 
+def setup_basis_set(
+    n,
+    l,
+    s,
+    h,
+    u,
+    dim=3,
+    particle_charge=-1,
+    np=None,
+    includes_spin=False,
+    anti_symmetrized_u=False,
+    **kwargs,
+):
+
+    if np is None:
+        import numpy as np
+
+    bs = BasisSet(
+        l,
+        dim=dim,
+        np=np,
+        includes_spin=includes_spin,
+        anti_symmetrized_u=anti_symmetrized_u,
+    )
+
+    bs.h = h
+    bs.u = u
+    bs.s = s
+    bs.particle_charge = particle_charge
+
+    if "position" in kwargs.keys():
+        bs.position = kwargs["position"]
+
+    if "momentum" in kwargs.keys():
+        bs.momentum = kwargs["momentum"]
+
+    if "nuclear_repulsion_energy" in kwargs.keys():
+        bs.nuclear_repulsion_energy = kwargs["nuclear_repulsion_energy"]
+
+    return bs
+
+
+def construct_custom_system(
+    n,
+    l,
+    s,
+    h,
+    u,
+    dim=3,
+    particle_charge=-1,
+    np=None,
+    includes_spin=False,
+    anti_symmetrized_u=False,
+    system_type="general",
+    **kwargs,
+):
+
+    if np is None:
+        import numpy as np
+
+    bs = setup_basis_set(
+        n,
+        l,
+        s,
+        h,
+        u,
+        dim,
+        particle_charge,
+        np,
+        includes_spin,
+        anti_symmetrized_u,
+        **kwargs,
+    )
+
+    if system_type.lower() == "general":
+        system = GeneralOrbitalSystem(n, bs)
+    elif system_type.lower() == "spatial":
+        system = SpatialOrbitalSystem(n, bs)
+    else:
+        raise NotImplementedError(
+            f"System type: {system_type} is not supported!"
+        )
+
+    if "C" in kwargs.keys():
+        system.change_basis(kwargs["C"])
+
+    return system
+
+
 def construct_pyscf_system_ao(
     molecule,
     basis="cc-pvdz",
@@ -75,26 +164,22 @@ def construct_pyscf_system_ao(
     n = mol.nelectron
     l = mol.nao
 
-    # n_a = (mol.nelectron + mol.spin) // 2
-    # n_b = n_a - mol.spin
-
-    # assert n_b == n - n_a
-
     h = pyscf.scf.hf.get_hcore(mol)
     s = mol.intor_symmetric("int1e_ovlp")
     u = mol.intor("int2e").reshape(l, l, l, l).transpose(0, 2, 1, 3)
     position = mol.intor("int1e_r").reshape(3, l, l)
 
-    bs = BasisSet(l, dim=3, np=np)
-    bs.h = h
-    bs.s = s
-    bs.u = u
-    bs.nuclear_repulsion_energy = nuclear_repulsion_energy
-    bs.particle_charge = -1
-    bs.position = position
-    bs.change_module(np=np)
-
-    system = SpatialOrbitalSystem(n, bs)
+    system = construct_custom_system(
+        n,
+        l,
+        s,
+        h,
+        u,
+        np=np,
+        position=position,
+        system_type="spatial",
+        nuclear_repulsion_energy=nuclear_repulsion_energy,
+    )
 
     return (
         system.construct_general_orbital_system(anti_symmetrize=anti_symmetrize)
@@ -208,17 +293,18 @@ def construct_pyscf_system_rhf(
     u = mol.intor("int2e").reshape(l, l, l, l).transpose(0, 2, 1, 3)
     position = mol.intor("int1e_r").reshape(3, l, l)
 
-    bs = BasisSet(l, dim=3, np=np)
-    bs.h = h
-    bs.s = s
-    bs.u = u
-    bs.nuclear_repulsion_energy = nuclear_repulsion_energy
-    bs.particle_charge = -1
-    bs.position = position
-    bs.change_module(np=np)
-
-    system = SpatialOrbitalSystem(n, bs)
-    system.change_basis(C)
+    system = construct_custom_system(
+        n,
+        l,
+        s,
+        h,
+        u,
+        np=np,
+        position=position,
+        system_type="spatial",
+        nuclear_repulsion_energy=nuclear_repulsion_energy,
+        C=C,
+    )
 
     return (
         system.construct_general_orbital_system(anti_symmetrize=anti_symmetrize)
